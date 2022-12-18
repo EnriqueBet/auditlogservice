@@ -1,0 +1,5 @@
+import os
+
+# MONGO CLIENT URL
+MONGO_CLIENT_URL = os.getenv("MONGO_CLIENT_URL")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
