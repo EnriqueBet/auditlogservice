@@ -1,15 +1,15 @@
 import config
 
 from fastapi import FastAPI
-from pymongo import MongoClient
-from db import router
+from api.routes import router
+from database import DatabaseClient
 
 app = FastAPI()
 
 @app.on_event("startup")
 def _initialize_db_client():
-    app.mongodb_client = MongoClient(host=config.MONGO_CLIENT_URL)
-    app.database = app.mongodb_client[config.MONGO_DB_NAME]
+    app.mongodb_client = DatabaseClient()
+    app.database = app.mongodb_client[DatabaseClient.database_name]
 
 @app.on_event('shutdown')
 def _shutdown_db_client():
