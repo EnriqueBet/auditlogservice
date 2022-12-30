@@ -1,10 +1,8 @@
-import config
+import api.v1.config as config
 
 from fastapi import FastAPI
-
-from events import router as event_router
-from users import router as user_router
-from database import DatabaseClient
+from api.v1.database import DatabaseClient
+from v1.api import router
 
 app = FastAPI()
 
@@ -17,5 +15,4 @@ def _initialize_db_client():
 def _shutdown_db_client():
     app.mongodb_client.close()
 
-app.include_router(user_router, tags=["token"], prefix="/token")
-app.include_router(event_router, tags=['events'], prefix="/events")
+app.include_router(router, prefix="/")
