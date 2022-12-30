@@ -25,7 +25,7 @@ def encrypt_password(pwd: str):
     :param pwd: The password to be encrypted
     :return: Hashed password with random salt
     """
-    return bcrypt(pwd.encode(), bcrypt.gensalt())
+    return bcrypt.hashpw(pwd.encode(), bcrypt.gensalt())
 
 def create_access_token(data: dict, expiration: timedelta | None = None):
     data_clone = data.copy()
