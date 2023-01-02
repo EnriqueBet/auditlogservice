@@ -1,9 +1,9 @@
 import bcrypt
-import config
+import v1.config as config
 
 from jose import jwt
 
-from models import User
+from v1.models import User
 from datetime import datetime, timedelta
 
 def date_format_validator(input_date) -> bool:

@@ -1,4 +1,4 @@
-import config
+import v1.config as config
 from pymongo import MongoClient
 
 class DatabaseClient:

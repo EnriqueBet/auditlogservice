@@ -1,7 +1,7 @@
-import api.v1.config as config
+import v1.config as config
 
 from fastapi import FastAPI
-from api.v1.database import DatabaseClient
+from v1.database import DatabaseClient
 from v1.api import router
 
 app = FastAPI()
@@ -15,4 +15,4 @@ def _initialize_db_client():
 def _shutdown_db_client():
     app.mongodb_client.close()
 
-app.include_router(router, prefix="/")
+app.include_router(router)

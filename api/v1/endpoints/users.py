@@ -1,4 +1,4 @@
-import config
+import v1.config as config
 
 from fastapi import APIRouter
 from fastapi import APIRouter, HTTPException, Depends, status
@@ -6,9 +6,9 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 
-from models import Token, TokenData, RegisteredUser
-from utils import create_access_token
-from database import DatabaseClient as db_client
+from v1.models import Token, TokenData, RegisteredUser
+from v1.utils import create_access_token
+from v1.database import DatabaseClient as db_client
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="authToken")
@@ -47,11 +47,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     if user := get_user(username=token_data.username) is None:
         raise user_exception
     
-    if user.is_disabled:
+    if user.disabled:
         raise HTTPException(status_code=400, detail='Your user is disabled, please contact the system admin')
     return user
 
-@router.post("/token", response_model=Token)
+@router.post("/", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if not (user := authenticate_user(form_data.username, form_data.password)):
         raise HTTPException(status_code=400, 

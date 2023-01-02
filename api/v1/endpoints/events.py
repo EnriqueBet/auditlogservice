@@ -1,5 +1,5 @@
 import pytz
-import config
+import v1.config as config
 
 from typing import List
 from datetime import datetime
@@ -7,10 +7,10 @@ from datetime import datetime
 from fastapi import status, Request, Response, APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 
-from models import LogEvent, User
-from users import get_current_user
-from utils import date_format_validator
-from exceptions import IncorrectDateFormatError
+from v1.models import LogEvent, User
+from v1.endpoints.users import get_current_user
+from v1.utils import date_format_validator
+from v1.exceptions import IncorrectDateFormatError
 
 router = APIRouter()
 
