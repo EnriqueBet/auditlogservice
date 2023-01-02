@@ -9,8 +9,6 @@ from fastapi.encoders import jsonable_encoder
 
 from v1.models import LogEvent, User
 from v1.endpoints.users import get_current_user
-from v1.utils import date_format_validator
-from v1.exceptions import IncorrectDateFormatError
 
 router = APIRouter()
 
@@ -22,7 +20,7 @@ async def create_events(request: Request, event: LogEvent, user: User = Depends(
     event = jsonable_encoder(event)
 
     # Set server sources and timestamp
-    event["user"] = user
+    event["user_id"] = user.id
     event["timestamp"] = datetime.now(pytz.utc)
     event["source"] = request.client[0]
 
@@ -36,24 +34,13 @@ async def create_events(request: Request, event: LogEvent, user: User = Depends(
             response_model=List[LogEvent]
             )
 async def get_events(request: Request, user: User = Depends(get_current_user)):
-    params = request.query_params
+    """
+    Get a list of events from a given user
+
+    :param: 
+    """
+    # TODO: Set correct permissions for users that can see all events created (like admins)
     query = {"user_id": user.id}
-
-    # Validate data formatting
-    if "start_date" in params:
-        if not date_format_validator(params["start_date"]):
-            return IncorrectDateFormatError(key='start_date')
-        query["timestamp"] = {'$gte': params["start_date"]}
-    
-    if "end_date" in params:
-        if not date_format_validator(params["end_date"]):
-            return IncorrectDateFormatError(key='end_date')
-        query["timestamp"] = {'$lt': params["end_date"]}
-    
-    for param, value in params.items():
-        if param not in ('start_date', 'end_date', 'data'):
-            query[param] = value
-
     return list(request.app.database["events"].find(query, 
                                                     limit=config.EVENT_QUERY_DEFAULT_LIMIT))
 

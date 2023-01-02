@@ -27,8 +27,8 @@ def verify_password(str_pwd: str, hash_pwd: str) -> bool:
 
 def get_user(username: str):
     user_map = db_client.get_instance().database["users"].find_one({'username': username})
-    print(user_map)
     if user_map:
+        user_map["_id"] = str(user_map['_id'])
         return RegisteredUser(**user_map)
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -39,14 +39,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, config.SECRET_KEY, algorithms=config.HASH_ALGO)
-        if username := str(payload.get("sub")) is None:
+        if (username := str(payload.get("sub"))) is None:
             raise user_exception
         token_data = TokenData(username=username)
     except JWTError as error:
         raise user_exception
-    if user := get_user(username=token_data.username) is None:
+    if (user := get_user(username=token_data.username)) is None:
         raise user_exception
-    
+
     if user.disabled:
         raise HTTPException(status_code=400, detail='Your user is disabled, please contact the system admin')
     return user
@@ -57,8 +57,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=400, 
                             detail="Incorrect username or password",
                             headers={"WWW-Authenticate": "Bearer"})
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=config.ACCESS_TOKEN_EXPIRATION
-    )
+    access_token = create_access_token(data={"sub": user.username})
     
     return {"access_token": access_token, "token_type": "bearer"}
