@@ -1,7 +1,5 @@
 from v1.utils import encrypt_password
 from v1.database import DatabaseClient
-from v1.models import User
-import bcrypt
 
 def mock_create_user(username: str, password: str):
     """Creates users only for testing purposes"""

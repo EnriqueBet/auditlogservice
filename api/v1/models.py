@@ -1,13 +1,35 @@
+import pydantic
+
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from pydantic import BaseModel, Field
+from bson import ObjectId
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid objectid")
+        return ObjectId(v)
+
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
 
 class User(BaseModel):
-    id: str = Field(alias="_id")
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: str
     email: str | None = None
     full_name: str | None = None
     disabled: bool | None = False
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
 
 class RegisteredUser(User):
@@ -24,10 +46,17 @@ class TokenData(BaseModel):
 
 
 class LogEvent(BaseModel):
-    id: str = Field(alias="_id")
     name: str
     event_type: str
     detail: str
-    user_id: str | None = None
+    user_id: PyObjectId | None = Field(default_factory=PyObjectId, alias="_id")
     timestamp: datetime | None = None
     event_data: Dict[str, Any] | None = None
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+
+class StoredLogEvent(LogEvent):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    

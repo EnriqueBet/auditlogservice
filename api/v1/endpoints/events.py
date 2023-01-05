@@ -7,15 +7,15 @@ from datetime import datetime
 from fastapi import status, Request, Response, APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 
-from v1.models import LogEvent, User
+from v1.models import LogEvent, StoredLogEvent, User
 from v1.endpoints.users import get_current_user
 
 router = APIRouter()
 
 @router.post("/", 
-             response_description="Create a new log event",
+             response_description="Log an event",
              status_code=status.HTTP_201_CREATED,
-             response_model=LogEvent)
+             response_model=StoredLogEvent)
 async def create_events(request: Request, event: LogEvent, user: User = Depends(get_current_user)):
     event = jsonable_encoder(event)
 
@@ -30,8 +30,8 @@ async def create_events(request: Request, event: LogEvent, user: User = Depends(
     return created_event
 
 @router.get("/",
-            response_description="List al events",
-            response_model=List[LogEvent]
+            response_description="Retrieve a list of logged events",
+            response_model=List[StoredLogEvent]
             )
 async def get_events(request: Request, user: User = Depends(get_current_user)):
     """
@@ -39,13 +39,13 @@ async def get_events(request: Request, user: User = Depends(get_current_user)):
 
     :param: 
     """
-    # TODO: Set correct permissions for users that can see all events created (like admins)
+    # TODO: Set correct permissions for users based on their scope
     query = {"user_id": user.id}
     return list(request.app.database["events"].find(query, 
                                                     limit=config.EVENT_QUERY_DEFAULT_LIMIT))
 
 @router.get("/{id}",
-            response_description="Get a single event by id",
+            response_description="Retrieve a single event using id",
             response_model=LogEvent)
 async def find_event(id: str, request: Request, token: str=Depends(get_current_user)):
     if (event := request.app.database["events"].find_one({"_id": id})):
