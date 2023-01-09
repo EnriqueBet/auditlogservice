@@ -1,8 +1,8 @@
 import bcrypt
-import v1.config as config
 
 from jose import jwt
 from datetime import datetime, timedelta
+from api.v1 import config
 
 def encrypt_password(pwd: str):
     """Encrypts a password using satls to avoid rainbow table attacks

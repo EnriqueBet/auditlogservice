@@ -1,14 +1,13 @@
-import v1.config as config
-
 from fastapi import APIRouter
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 
-from v1.models import Token, TokenData, RegisteredUser
-from v1.utils import create_access_token
-from v1.database import DatabaseClient as db_client
+from api.v1 import utils
+from api.v1 import config
+from api.v1.models import Token, TokenData, RegisteredUser
+from api.v1.database import DatabaseClient as db_client
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="authToken")
@@ -57,6 +56,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=400, 
                             detail="Incorrect username or password",
                             headers={"WWW-Authenticate": "Bearer"})
-    access_token = create_access_token(data={"sub": user.username})
+    access_token = utils.create_access_token(data={"sub": user.username})
     
     return {"access_token": access_token, "token_type": "bearer"}

@@ -1,8 +1,6 @@
-import pydantic
-
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Dict, Any
-from pydantic import BaseModel, Field
 from bson import ObjectId
 
 class PyObjectId(ObjectId):
@@ -23,7 +21,6 @@ class PyObjectId(ObjectId):
 class User(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: str
-    email: str | None = None
     full_name: str | None = None
     disabled: bool | None = False
 

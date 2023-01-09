@@ -1,14 +1,15 @@
-import pytz
-import v1.config as config
-
-from typing import List
 from datetime import datetime
+from typing import List
 
-from fastapi import status, Request, Response, APIRouter, HTTPException, Depends
+import pytz
+from bson import ObjectId
+from fastapi import (APIRouter, Depends, HTTPException, Request, Response,
+                     status)
 from fastapi.encoders import jsonable_encoder
 
-from v1.models import LogEvent, StoredLogEvent, User
-from v1.endpoints.users import get_current_user
+from api.v1 import config
+from api.v1.endpoints.users import get_current_user
+from api.v1.models import LogEvent, StoredLogEvent, User
 
 router = APIRouter()
 
@@ -27,6 +28,8 @@ async def create_events(request: Request, event: LogEvent, user: User = Depends(
     # Insert a new event into the database
     new_event = request.app.database["events"].insert_one(event)
     created_event = request.app.database["events"].find_one({"_id": new_event.inserted_id})
+    print(created_event)
+    print(request.app.database.list_collection_names())
     return created_event
 
 @router.get("/",
@@ -40,15 +43,20 @@ async def get_events(request: Request, user: User = Depends(get_current_user)):
     :param: 
     """
     # TODO: Set correct permissions for users based on their scope
-    query = {"user_id": user.id}
-    return list(request.app.database["events"].find(query, 
-                                                    limit=config.EVENT_QUERY_DEFAULT_LIMIT))
+    params = {}
+    if request.query_params:
+        for param in str(request.query_params).split("&"):
+            key, value = param.split("=")
+            params[key] = ObjectId(value) if key.startswith("_id") or key.endswith("_id") else value
+    
+    return list(request.app.database["events"].find(params, limit=config.EVENT_QUERY_DEFAULT_LIMIT))
 
 @router.get("/{id}",
             response_description="Retrieve a single event using id",
             response_model=LogEvent)
-async def find_event(id: str, request: Request, token: str=Depends(get_current_user)):
-    if (event := request.app.database["events"].find_one({"_id": id})):
+async def find_event(id: str, request: Request, user: User = Depends(get_current_user)):
+    query = request.app.database["events"].find_one({"_id": ObjectId(id)})
+    if (event := request.app.database["events"].find_one({"_id": ObjectId(id)})):
         return event
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"The event with id {id} was not found!")
@@ -57,8 +65,8 @@ async def find_event(id: str, request: Request, token: str=Depends(get_current_u
                response_description="Detele a single event by id",
                response_model=LogEvent)
 async def delete_event(id: str, request: Request, 
-                 response: Response, token: str=Depends(get_current_user)) -> Response:
-    deletion_result = request.app.database["events"].delete_one({"_id": id})
+                 response: Response, user: User = Depends(get_current_user)) -> Response:
+    deletion_result = request.app.database["events"].delete_one({"_id": ObjectId(id)})
     if deletion_result.deleted_count:
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
