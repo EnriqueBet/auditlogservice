@@ -1,8 +1,8 @@
-from datetime import datetime
-from typing import List
-
 import pytz
+
+from typing import List
 from bson import ObjectId
+from datetime import datetime
 from fastapi import (APIRouter, Depends, HTTPException, Request, Response,
                      status)
 from fastapi.encoders import jsonable_encoder
@@ -10,15 +10,26 @@ from fastapi.encoders import jsonable_encoder
 from api.v1 import config
 from api.v1.endpoints.users import get_current_user
 from api.v1.models import LogEvent, StoredLogEvent, User
+from api.v1.utils.logger import Logger
 
 router = APIRouter()
+logger = Logger.get_instance()
 
 @router.post("/", 
              response_description="Log an event",
              status_code=status.HTTP_201_CREATED,
              response_model=StoredLogEvent)
-async def create_events(request: Request, event: LogEvent, user: User = Depends(get_current_user)):
+async def create_event(request: Request, event: LogEvent, user: User = Depends(get_current_user)):
+    """REST endpoint to create an event
+
+    :param request: client request object
+    :param event: object model parsed from the request body
+    :param user: fixes a dependency on logged users to use this method, defaults to Depends(get_current_user)
+    :return: a dictionary containing the information fromr the created event
+    """
+    # Pass the received body to a dictionary
     event = jsonable_encoder(event)
+    logger.info(f"Creating an event with name: {event['name']} from user: {user.id}")
 
     # Set server sources and timestamp
     event["user_id"] = user.id
@@ -27,9 +38,11 @@ async def create_events(request: Request, event: LogEvent, user: User = Depends(
 
     # Insert a new event into the database
     new_event = request.app.database["events"].insert_one(event)
-    created_event = request.app.database["events"].find_one({"_id": new_event.inserted_id})
-    print(created_event)
-    print(request.app.database.list_collection_names())
+    if not (created_event := request.app.database["events"].find_one({"_id": new_event.inserted_id})):
+        logger.error(f"An error ocurred while creating the event: {new_event['name']}")
+        raise HTTPException(status_code=500, 
+                            detail=f"An error ocurred while creating the event: {new_event['name']}")
+    logger.info(f"Event {event['name']} was successfully created by user: {user.id}!!")
     return created_event
 
 @router.get("/",

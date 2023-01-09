@@ -1,19 +1,14 @@
-import datetime
 import json
-import logging
-import sys
 import unittest
 
-import pytz
 import requests
 import testing_utils
 
 from api.v1 import config
 from api.v1.database import DatabaseClient as db
+from api.v1.utils.logger import Logger
 
-logger = logging.getLogger(__file__)
-logger.addHandler(logging.StreamHandler(sys.stdout))
-logger.setLevel("INFO")
+logger = Logger.get_instance()
 
 class UnitTestCases(unittest.TestCase):
     _test_user = None
@@ -22,9 +17,8 @@ class UnitTestCases(unittest.TestCase):
 
     def setUp(self):
         # Create the test user and register it into the Users table
-        logger.info('Creating test user')
+        logger.info(f"------- Starting test {self._testMethodName} -------")
         self._test_user = testing_utils.create_test_user()
-        logger.info(f'Created test user: {self._test_user["username"]}')
 
         # Log in with the test user and fetch the auth token
         response = testing_utils.login(self._test_user['username'], self._test_user['password'])
@@ -36,18 +30,19 @@ class UnitTestCases(unittest.TestCase):
         logger.info(f"Attempting to delete test user")
         testing_utils.delete_user(self._test_user["_id"])
         logger.info(f"Test user: {self._test_user['username']} successfully deleted!")
+        logger.info(f"------- Finalizing test {self._testMethodName} -------\n")
         
 
     def test_create_event(self):
-        """Create an event with required data only"""
+        """Validate that an event is created with required data only"""
         headers = {
             "Content-type": "application/json",
             "Authorization": f"Bearer {self._token}",
             "Accept-Encoding": "gzip, deflate, br"
         }
         body = {
-            "name": f"TestName-{testing_utils.random_text(6)}",
-            "detail": f"TestDetails-{testing_utils.random_text(12)}",
+            "name": f"TestName-{testing_utils.random_text()}",
+            "detail": f"TestDetails-{testing_utils.random_text(length=12)}",
             "event_type": "TestEventType",
         }
         logger.info("Attempting to create a new event with data:")
@@ -74,17 +69,9 @@ class UnitTestCases(unittest.TestCase):
         self.assertTrue(bool(created_event['_id']))
 
     def test_fetch_an_event(self):
+        """Validate that an event can be fetched"""
         # Create an event on the database
-        result = db.get_db()["events"].insert_one(
-            {
-                "name": f'TestFetchEvent-{testing_utils.random_text(6)}',
-                "detail": f'TestDetail-{testing_utils.random_text(12)}',
-                'event_type': 'TestEventType',
-                'timestamp': str(datetime.datetime.now(pytz.utc))
-            }
-        )
-        event = db.get_db()['events'].find_one({"_id": result.inserted_id})
-        print(event)
+        event = testing_utils.create_an_event()
 
         # Get the event from the request
         headers = {
@@ -102,11 +89,22 @@ class UnitTestCases(unittest.TestCase):
         self.assertEqual(fetched_event["detail"], event["detail"])
         self.assertEqual(fetched_event["event_type"], event["event_type"])
 
+    def test_delete_an_event(self):
+        """Validate that an event can be deleted by the user"""
+        # Create an event on the database
+        event = testing_utils.create_an_event()
 
+        # Attempt to delete the event
+        headers = {"Authorization": f"Bearer {self._token}"}
+        response = requests.delete(url=f"{self.events_url}/{event['_id']}", headers=headers)
 
-
-
+        # Validate that request was successful
+        self.assertEqual(response.status_code, 204, 
+                         msg=f"Unexpected Status Code, expecting '204' got '{response.status_code}'. Message: {response._content}")
         
+        # Validate that the event can't be found on the database
+        deleted_event = db.get_db()["events"].find_one({"_id": event['_id']})
+        self.assertFalse(bool(deleted_event))
 
     
 
