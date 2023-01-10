@@ -1,8 +1,8 @@
 import os
 
 # MONGO CLIENT URL
-MONGO_CLIENT_URL = os.getenv("MONGO_CLIENT_URL")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
+MONGO_CLIENT_URL = os.getenv("MONGO_CLIENT_URL", "mongodb://localhost:27017")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "auditlogservice")
 
 # EVENTS DEFAULTS
 EVENT_QUERY_DEFAULT_LIMIT = int(os.getenv("EVENT_QUERY_DEFAULT_LIMIT", 100))
