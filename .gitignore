@@ -1,2 +1,5 @@
 # Removing pycache from every folder
 **/__pycache__
+
+# Developer dot files
+.vscode

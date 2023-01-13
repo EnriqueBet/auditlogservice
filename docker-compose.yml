@@ -1,8 +1,31 @@
 version: "3.8"
 services:
-  db:
+  auditlogbackend:
+      container_name: auditlogbackend
+      restart: always
+      build: 
+        context: . 
+        dockerfile: Dockerfile
+      environment:
+        MONGO_CLIENT_URL: mongodb://auditlogdb:27017
+        MONGO_DB_NAME: auditlogservice
+      ports:
+        - "8080:80"
+      links:
+        - auditlogdb        
+      depends_on:
+        - auditlogdb
+      networks:
+        - service-network
+
+  auditlogdb:
       image: mongo:latest
       container_name: auditlogdb
-      restart: always
       ports:
         - "27017:27017"
+      networks:
+        - service-network
+
+networks:
+  service-network:
+    driver: bridge
