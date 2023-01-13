@@ -11,13 +11,12 @@ def mock_create_user(username: str, password: str):
     :param username: Username
     :param password: Password
     """
-    salted_password = common.encrypt_password(password)
-    result = db.get_db()['users'].insert_one({
-                                                             "username": username, 
-                                                             "hashed_password": salted_password.decode(), 
-                                                             "disabled": False
-                                                             })
-    if not (db.get_db()['users'].find_one({"_id": result.inserted_id})):
-        raise Exception("The test user was not created")
+    result = db.get_instance().database["users"].insert_one({
+                                                "username": username,
+                                                "hashed_password": common.encrypt_password(password).decode(),
+                                                "disabled": False
+                                             })
+    print(db.get_instance().database["users"].find_one({"_id": result.inserted_id}))
 
-mock_create_user("ijansky", "ijansky")
+mock_create_user("ijansky", "1234568694")
+mock_create_user("frankban", "1234566234")

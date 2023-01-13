@@ -10,7 +10,7 @@ RUN pip install -r /auditlogservice/requirements.txt
 WORKDIR /auditlogservice
 
 # Port configuration
-EXPOSE 8000
+EXPOSE 8080
 
 # Environmental variables (this variables are set for a local build)
 ENV SERVICE_BASE_URL=0.0.0.0
