@@ -8,7 +8,7 @@ services:
         dockerfile: Dockerfile
       environment:
         MONGO_CLIENT_URL: mongodb://auditlogdb:27017
-        MONGO_DB_NAME: auditlogservice"
+        MONGO_DB_NAME: auditlogservice
       ports:
         - "8080:80"
       links:
