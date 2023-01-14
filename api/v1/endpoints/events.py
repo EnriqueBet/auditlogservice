@@ -1,7 +1,7 @@
 import pytz
+import urllib.parse
 
 from typing import List
-from bson import ObjectId
 from datetime import datetime
 from fastapi import (APIRouter, Depends, HTTPException, Request, Response,
                      status)
@@ -58,9 +58,9 @@ async def get_events(request: Request, user: User = Depends(get_current_user)):
     # TODO: Set correct permissions for users based on their scope
     params = {}
     if request.query_params:
-        for param in str(request.query_params).split("&"):
-            key, value = param.split("=")
-            params[key] = ObjectId(value) if key.startswith("_id") or key.endswith("_id") else value
+        params = urllib.parse.parse_qs(str(request.query_params))
+        # Added '$in' keyword to use multiple field/value query
+        params = {key: {"$in": value} for key, value in params.items()}
     
     return list(request.app.database["events"].find(params, limit=config.EVENT_QUERY_DEFAULT_LIMIT))
 
@@ -68,8 +68,7 @@ async def get_events(request: Request, user: User = Depends(get_current_user)):
             response_description="Retrieve a single event using id",
             response_model=LogEvent)
 async def find_event(id: str, request: Request, user: User = Depends(get_current_user)):
-    query = request.app.database["events"].find_one({"_id": ObjectId(id)})
-    if (event := request.app.database["events"].find_one({"_id": ObjectId(id)})):
+    if (event := request.app.database["events"].find_one({"_id": id})):
         return event
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"The event with id {id} was not found!")
@@ -79,7 +78,7 @@ async def find_event(id: str, request: Request, user: User = Depends(get_current
                response_model=LogEvent)
 async def delete_event(id: str, request: Request, 
                  response: Response, user: User = Depends(get_current_user)) -> Response:
-    deletion_result = request.app.database["events"].delete_one({"_id": ObjectId(id)})
+    deletion_result = request.app.database["events"].delete_one({"_id": id})
     if deletion_result.deleted_count:
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
