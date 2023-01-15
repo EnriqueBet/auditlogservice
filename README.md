@@ -3,7 +3,7 @@
 ## Overview
 The `auditlogservice` is a microservice that allows for the `creation`, `retrieval`, and `deletion` of events from multiple sources. The service includes two main endpoints: the `token/` endpoint, which handles user authorization using the `OAuth2` protocol and returns a bearer token with a default expiration of 12 hours, and the `events/` endpoint, which allows for the creation and retrieval of events using the `GET`, `POST`, and `DELETE` request methods.
 
-## Techical considerations
+## Technical considerations
 
 ### Database
 In terms of database choice, `mongoDB` was selected as a `NoSQL` database to store event data as documents. This allows easy horizontal scaling by initializing new instances and defining rules for evenly distributing data across instances. `SQL` databases were also considered, but it was determined that the dynamic structure of the `event_data` parameter would require serialization when storing and deserialization when fetching, and that the requirements did not need the use of `ACID` compliance.
@@ -51,7 +51,7 @@ For functional testing, use the following instructions:
     ```bash
     $ python tests/mock_script.py
     ```
-3. Follow the examples provided bellow for functional testing
+3. Follow the examples provided below for functional testing
 
 #### Obtain an auth token
 
@@ -100,7 +100,7 @@ curl --location --request GET 'http://0.0.0.0:8080/events' \
 --header 'Authorization: Bearer <AUTH_TOKEN>'
 ```
 
-example reponse:
+example response:
 ```bash
 [{"name":"EventName","event_type":"Some Event Type","detail":"Adding some Event","_id":"63c0a7f835205566abc6ee0e","timestamp":"2023-01-13T00:38:16.555000","event_data":null},{"name":"EventName","event_type":"Some Event Type","detail":"Adding some Event","_id":"63c0ee5fe84e0b8634928574","timestamp":"2023-01-13T05:38:39.148000","event_data":null},{"name":"EventName3","event_type":"Some Event Type","detail":"Adding some Event","_id":"63c0ee6be84e0b8634928575","timestamp":"2023-01-13T05:38:51.729000","event_data":null}]
 ```
@@ -125,7 +125,7 @@ example response
 }
 ```
 ----
-#### Retrieve events that matches some criteria
+#### Retrieve events that match some criteria
 
 ```bash
 curl --location --request GET 'http://0.0.0.0:8000/events?<FIELD>=<VALUE>' \
