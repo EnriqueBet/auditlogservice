@@ -31,7 +31,27 @@ and follow the instructions to register a new user in the database.
 
 ## Testing
 
-Instructions for testing the code are provided for a local setup and assume that the code has been deployed as instructed.
+### Unit testing
+
+To run the unit tests for this service, follow these steps:
+
+1. Install the necessary dependencies on your local machine.
+2. Deploy the server as instructed in the `Deploying` section.
+3. Execute the command:
+```bash
+$ python tests/unit_tests.py UnitTestCases 
+```
+
+### Functional testing
+
+For functional testing, use the following instructions:
+
+1. Ensure that the code has been deployed as instructed.
+2. Execute the `mock_script.py` to create a user:
+    ```bash
+    $ python tests/mock_script.py
+    ```
+3. Follow the examples provided bellow for functional testing
 
 #### Obtain an auth token
 
