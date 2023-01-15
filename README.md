@@ -1,42 +1,28 @@
 # auditlogservice
 
 ## Overview
-The `auditlogservice` is a microservice that can `create`, `retrieve`, and `delete` events coming from multiple services. This service includes two endpoints:
-
-- `token/`
-- `events/`
-
-The `token/` endpoint takes care of authorization by implementing an `OAuth2` protocol tha receives the `credentials` from the user and returns a `bearer token` with a default expiration of 12 hours. 
-
-The `events/` endpoint is used to create and retrieve events created from other services. It has implemented the request methods `GET`, `POST`, and `DELETE`
+The `auditlogservice` is a microservice that allows for the `creation`, `retrieval`, and `deletion` of events from multiple sources. The service includes two main endpoints: the `token/` endpoint, which handles user authorization using the `OAuth2` protocol and returns a bearer token with a default expiration of 12 hours, and the `events/` endpoint, which allows for the creation and retrieval of events using the `GET`, `POST`, and `DELETE` request methods.
 
 ## Techical considerations
 
 ### Database
-I decided to use `mongoDB` a `NoSQL` database to facilitate the storage of not well defined `event_data` as documents. Also, `mongoDB` allows to easily escalate horizontally by initializing new instances and define rules to store the data evenly across instances.
-
-On the other hand, I also considered using a `SQL` schema for the database. The tradeoffs of using `SQL` were:
-
-* The `event_data` parameter doesn't have a dynamic structure and the requirements doensn't allow to make code updates to include these changes. This means that the `event_data` parameter will need to be serialized when storing it and deserialized when fetched.
-* Ensures `ACID` compliance, but it's not needed by the application.
+In terms of database choice, `mongoDB` was selected as a `NoSQL` database to store event data as documents. This allows easy horizontal scaling by initializing new instances and defining rules for evenly distributing data across instances. `SQL` databases were also considered, but it was determined that the dynamic structure of the `event_data` parameter would require serialization when storing and deserialization when fetching, and that the requirements did not need the use of `ACID` compliance.
 
 ### Backend
-I decided to develop the backend based on `PyDantic` to handle the object models, `FastAPI` to handle the requests and response of the server, and `Uvicorn` to run the server.
+The backend of the service was developed using `PyDantic` for handling object models, `FastAPI` for handling requests and responses, and `Uvicorn` for running the server. `Uvicorn` was chosen for its compatibility with the `Asynchronous Server Gateway Interface (ASGI)` and backwards compatibility with `WSGI`, allowing for efficient handling of multiple incoming and outgoing events.
 
+`FastAPI` was selected for its ability to handle requests asynchronously, its lightweight and high-performance nature, and its flexibility for maintenance. Other frameworks such as `Django` and `Flask` were considered, however, they did not provide the same level of performance and async support as `FastAPI`. This made `FastAPI` the best choice for the requirements of the service.
 
 ## Further considerations
 
-* <ins>Implement `scoping` to control user permission capabilities</ins>. For instance, we might want to let some users to being capable of reading events but not being able to create/delete them.
-* <ins>Implement `smart event filtering`.</ins> For now simple filtering has been implemented and users can filter events by exact matches (*see the ***Testing*** section*). Adding filters like being able to filter by a range of dates or to use partial matches or wildcards would be helpful
-* <ins>Configure `mongodb` to use multiple instances</ins>. Add configuration that allow to use multiple instances of mongodb and escalate horizontally if needed.
-
+In terms of future considerations, the service could benefit from the implementation of scoping to control user permission capabilities, such as allowing some users to only read events but not create or delete them. Additionally, smart event filtering could be implemented, such as the ability to filter by a range of dates or use partial matches or wildcards. Finally, the service could be configured to use multiple instances of `mongodb` for horizontal scaling.
 
 ## Deploying
-This microservice uses `docker` in order to be deployed, to deploy just run the command:
+The service can be deploying by using the command
 ```bash
-docker-compose up --build
+$ docker-compose up --build
 ```
-For the purposes of testing this technical assesment, I included a `mock` script that allows to create users directly on the `Users` table on `test/mock_script.py`. To create an user just run:
+and a mock script for creating users directly on the `Users` table is included for testing purposes. In order to create a new user just execute:
 
 ```bash
 $ python test/mock_script.py
@@ -45,8 +31,9 @@ and follow the instructions to register a new user in the database.
 
 ## Testing
 
-The instructions to test the code are given on a local setup and assuming the code was deployed according to the instructions given on the ***Deploying*** section
-#### Retrieve auth token
+Instructions for testing the code are provided for a local setup and assume that the code has been deployed as instructed.
+
+#### Obtain an auth token
 
 ```bash
 curl --location --request POST 'http://0.0.0.0:8080/token' \
