@@ -18,7 +18,7 @@ The backend of the service was developed using `PyDantic` for handling object mo
 In terms of future considerations, the service could benefit from the implementation of scoping to control user permission capabilities, such as allowing some users to only read events but not create or delete them. Additionally, smart event filtering could be implemented, such as the ability to filter by a range of dates or use partial matches or wildcards. Finally, the service could be configured to use multiple instances of `mongodb` for horizontal scaling.
 
 ## Deploying
-The service can be deploying by using the command
+The service can be deployed by using the command
 ```bash
 $ docker-compose up --build
 ```
