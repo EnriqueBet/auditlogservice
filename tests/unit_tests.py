@@ -17,7 +17,7 @@ class UnitTestCases(unittest.TestCase):
 
     def setUp(self):
         # Create the test user and register it into the Users table
-        logger.info(f"------- Starting test {self._testMethodName} -------")
+        logger.info(f"------- Starting test: '{self._testMethodName}' -------")
         self._test_user = testing_utils.create_test_user()
 
         # Log in with the test user and fetch the auth token
@@ -30,7 +30,7 @@ class UnitTestCases(unittest.TestCase):
         logger.info(f"Attempting to delete test user")
         testing_utils.delete_user(self._test_user["_id"])
         logger.info(f"Test user: {self._test_user['username']} successfully deleted!")
-        logger.info(f"------- Finalizing test {self._testMethodName} -------\n")
+        logger.info(f"------- Finalizing test: '{self._testMethodName}' -------\n")
         
 
     def test_create_event(self):
@@ -77,6 +77,7 @@ class UnitTestCases(unittest.TestCase):
         headers = {
             "Authorization": f"Bearer {self._token}"
         }
+        logger.info(f"Attempting to fetch event {event['_id']} via API...")
         response = requests.get(url=f"{self.events_url}/{event['_id']}", headers=headers)
         
         # Validate successful response
@@ -85,6 +86,7 @@ class UnitTestCases(unittest.TestCase):
 
         # Validate the fields from the response
         fetched_event = response.json()
+        logger.info("Validating API fetched data against the one stored on the db")
         self.assertEqual(fetched_event["name"], event["name"])
         self.assertEqual(fetched_event["detail"], event["detail"])
         self.assertEqual(fetched_event["event_type"], event["event_type"])
@@ -96,6 +98,7 @@ class UnitTestCases(unittest.TestCase):
 
         # Attempt to delete the event
         headers = {"Authorization": f"Bearer {self._token}"}
+        logger.info(f"Attempting to delete event with id: {event['_id']}")
         response = requests.delete(url=f"{self.events_url}/{event['_id']}", headers=headers)
 
         # Validate that request was successful
@@ -103,9 +106,34 @@ class UnitTestCases(unittest.TestCase):
                          msg=f"Unexpected Status Code, expecting '204' got '{response.status_code}'. Message: {response._content}")
         
         # Validate that the event can't be found on the database
+        logger.info("Validating that the event is not found on the db")
         deleted_event = db.get_db()["events"].find_one({"_id": event['_id']})
         self.assertFalse(bool(deleted_event))
 
+    def test_fetch_created_events(self):
+        """Validate that multiple created events are fetched"""
+        # Create multiple events on the database
+        logger.info("Attempting to create 3 events on the database....")
+        events = [testing_utils.create_an_event() for _ in range(3)]
+
+        # Fetch all the testing events on the database
+        headers = {"Authorization": f"Bearer {self._token}"}
+        response = requests.get(url=self.events_url, 
+                                headers=headers,
+                                params={"event_type": "TestEventType"})
+        fetched_event_ids = [event['_id'] for event in response.json()]
+        
+        # Validate that the request was successful
+        self.assertEqual(response.status_code, 200, 
+                         msg=f"Unexpected Status Code, expecting '200' got '{response.status_code}'. Message: {response._content}")
+
+        # Validate that the created events are fetched
+        logger.info("Validate if the created events are fetched from the API")
+        for event in events:
+            result = str(event['_id']) in fetched_event_ids
+            logger.info(f"event {event['_id']} in fetched events: {result}")
+            self.assertTrue(result, msg=f"Event {event['_id']} not found in fetched events")
+        
     
 
 if __name__ == "__main__":

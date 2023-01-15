@@ -21,7 +21,6 @@ def authenticate_user(username: str, pwd: str):
 
 def verify_password(str_pwd: str, hash_pwd: str) -> bool:
     result = pwd_context.verify(str_pwd, hash_pwd)
-    print(result)
     return result
 
 def get_user(username: str):
