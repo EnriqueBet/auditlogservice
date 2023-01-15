@@ -46,7 +46,7 @@ class LogEvent(BaseModel):
     name: str
     event_type: str
     detail: str
-    user_id: PyObjectId | None = Field(default_factory=PyObjectId, alias="_id")
+    user_id: PyObjectId | None = Field(default_factory=PyObjectId)
     timestamp: datetime | None = None
     event_data: Dict[str, Any] | None = None
 

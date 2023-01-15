@@ -9,7 +9,7 @@ from fastapi.encoders import jsonable_encoder
 
 from api.v1 import config
 from api.v1.endpoints.users import get_current_user
-from api.v1.models import LogEvent, StoredLogEvent, User
+from api.v1.models import LogEvent, StoredLogEvent, User, PyObjectId
 from api.v1.utils.logger import Logger
 
 router = APIRouter()
@@ -34,7 +34,6 @@ async def create_event(request: Request, event: LogEvent, user: User = Depends(g
     # Set server sources and timestamp
     event["user_id"] = user.id
     event["timestamp"] = datetime.now(pytz.utc)
-    event["source"] = request.client[0]
 
     # Insert a new event into the database
     new_event = request.app.database["events"].insert_one(event)
@@ -68,7 +67,7 @@ async def get_events(request: Request, user: User = Depends(get_current_user)):
             response_description="Retrieve a single event using id",
             response_model=LogEvent)
 async def find_event(id: str, request: Request, user: User = Depends(get_current_user)):
-    if (event := request.app.database["events"].find_one({"_id": id})):
+    if (event := request.app.database["events"].find_one({"_id": PyObjectId(id)})):
         return event
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"The event with id {id} was not found!")
@@ -78,7 +77,7 @@ async def find_event(id: str, request: Request, user: User = Depends(get_current
                response_model=LogEvent)
 async def delete_event(id: str, request: Request, 
                  response: Response, user: User = Depends(get_current_user)) -> Response:
-    deletion_result = request.app.database["events"].delete_one({"_id": id})
+    deletion_result = request.app.database["events"].delete_one({"_id": PyObjectId(id)})
     if deletion_result.deleted_count:
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
